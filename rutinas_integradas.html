@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicación Integrada de Rutinas de Ejercicios</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 650px;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-top: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        /* Selección de Rutina */
+        .selector-group {
+            margin-bottom: 25px;
+            text-align: left;
+            background: #eef2f5;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 5px solid #3498db;
+        }
+        .selector-group label {
+            display: block;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        .selector-group select {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: white;
+            color: #333;
+            cursor: pointer;
+            outline: none;
+        }
+        .selector-group select:focus {
+            border-color: #3498db;
+        }
+
+        .phase {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        .timer {
+            font-size: 4.5rem;
+            font-weight: bold;
+            color: #2980b9;
+            margin: 15px 0;
+            font-variant-numeric: tabular-nums;
+            transition: color 0.3s ease;
+        }
+        .timer.work { color: #e74c3c; }
+        .timer.rest { color: #2ecc71; }
+        
+        .exercise-title {
+            font-size: 1.7rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 600;
+            min-height: 2.2rem;
+        }
+        .description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 25px;
+            text-align: left;
+            background: #f9f9f9;
+            padding: 15px;
+            border-left: 5px solid #2980b9;
+            border-radius: 4px;
+            min-height: 80px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        .btn-start { background-color: #2ecc71; color: white; }
+        .btn-start:hover { background-color: #27ae60; }
+        .btn-pause { background-color: #f39c12; color: white; }
+        .btn-pause:hover { background-color: #d35400; }
+        .btn-reset { background-color: #95a5a6; color: white; }
+        .btn-reset:hover { background-color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Centro de Rutinas Adaptadas</h1>
+
+    <!-- Menú desplegable para seleccionar rutina -->
+    <div class="selector-group">
+        <label for="routine-select">Selecciona una Rutina:</label>
+        <select id="routine-select" onchange="switchRoutine()">
+            <option value="abs">Abdominales de Pie Adaptados</option>
+            <option value="kickboxing">Rutina de Kickboxing (26 min)</option>
+            <option value="resistencia">Rutina de Resistencia (1:1)</option>
+        </select>
+    </div>
+
+    <div id="phase" class="phase">Presiona Iniciar</div>
+    
+    <div id="timer" class="timer">02:00</div>
+    
+    <div id="exercise-title" class="exercise-title">¡Listo para empezar!</div>
+    <div id="description" class="description">
+        Cargando la rutina seleccionada...
+    </div>
+    
+    <div class="buttons">
+        <button class="btn-start" onclick="startTimer()">Iniciar</button>
+        <button class="btn-pause" onclick="pauseTimer()">Pausar</button>
+        <button class="btn-reset" onclick="resetRoutine()">Reiniciar</button>
+    </div>
+</div>
+
+<script>
+    // Base de datos de rutinas
+    const routinesData = {
+        abs: {
+            title: "Abdominales de Pie Adaptados",
+            initialTime: "02:00",
+            initialDesc: "Rutina adaptada 100% de pie sin suelo. Presiona Iniciar para comenzar con el calentamiento suave.",
+            steps: [
+                // CALENTAMIENTO NEUTRO (2 min)
+                { phase: "Calentamiento", title: "Respiración Diafragmática", duration: 60, type: "work", desc: "De pie, inhala expandiendo el abdomen y exhala metiendo el ombligo hacia la espina. Mantén los hombros relajados y la mirada al frente." },
+                { phase: "Calentamiento", title: "Balanceo de Cadera Neutro", duration: 60, type: "work", desc: "Sujétate suavemente si necesitas equilibrio. Realiza basculaciones pélvicas ligeras hacia adelante y atrás para activar la zona lumbar." },
+                
+                // BLOQUE 1: CORE ESTÁTICO Y OBLICUOS (4 min)
+                { phase: "Bloque 1 - Trabajo", title: "Inclinación Lateral de Costillas", duration: 45, type: "work", desc: "Sin doblar el cuello ni inclinar la zona lumbar, desliza una mano hacia la rodilla lateralmente 2-3 cm y regresa. Alterna lados lentamente." },
+                { phase: "Bloque 1 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Suelta los brazos y respira manteniendo postura erguida." },
+                { phase: "Bloque 1 - Trabajo", title: "Contracción de Guardia (Core Bracing)", duration: 45, type: "work", desc: "Brazos en guardia relajada. Mete el abdomen fuertemente como si fueras a recibir un toque ligero en el vientre. Mantén la respiración." },
+                { phase: "Bloque 1 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Relaja la pared abdominal y recupera la postura." },
+                { phase: "Bloque 1 - Trabajo", title: "Micro-Rotación de Pecho", duration: 45, type: "work", desc: "Manos sobre el pecho. Gira el tronco solo 10 a 15 grados a cada lado. Caderas, piernas y cuello se mantienen totalmente firmes apuntando al frente." },
+                { phase: "Bloque 1 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Toma aire profundo por la nariz y exhala suavemente." },
+
+                // DESCANSO INTERMEDIO (1 min)
+                { phase: "Recuperación", title: "Descanso de Columna", duration: 60, type: "rest", desc: "Relaja los hombros, mueve los brazos libremente y bebe un sorbo de agua si lo necesitas." },
+
+                // BLOQUE 2: ESTABILIDAD E ISOMETRÍA (4 min)
+                { phase: "Bloque 2 - Trabajo", title: "Caminata Estática de Apoyo", duration: 45, type: "work", desc: "Despega suavemente los talones del suelo sin levantar los dedos de las articulaciones, contrayendo el abdomen con cada paso para mantener el equilibrio." },
+                { phase: "Bloque 2 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Respira hondo y asegura tu postura recta." },
+                { phase: "Bloque 2 - Trabajo", title: "Press Isométrico de Manos", duration: 45, type: "work", desc: "Junta las palmas al frente del pecho. Presiona una contra otra fuertemente durante 5 segundos contrayendo el abdomen, luego suelta 2 segundos y repite." },
+                { phase: "Bloque 2 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Relaja los hombros sin dejar caer el cuello hacia abajo." },
+                { phase: "Bloque 2 - Trabajo", title: "Extensión Cruzada Suave", duration: 45, type: "work", desc: "Lleva una mano suavemente hacia la cadera opuesta en diagonal mediante una micro-flexión abdominal, manteniendo la espalda totalmente neutra." },
+                { phase: "Bloque 2 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Último descanso antes del estiramiento final." },
+
+                // ENFRIAMIENTO (2 min)
+                { phase: "Enfriamiento", title: "Despresurización Lumbar", duration: 60, type: "work", desc: "Coloca las manos en la cintura baja y estira suavemente el pecho hacia el frente sin tirar la cabeza hacia atrás." },
+                { phase: "Enfriamiento", title: "Respiración Final", duration: 60, type: "work", desc: "Inhala elevando los brazos suavemente a los costados y exhala bajándolos para finalizar." }
+            ]
+        },
+        kickboxing: {
+            title: "Rutina de Kickboxing Adaptada",
+            initialTime: "01:00",
+            initialDesc: "Presiona el botón de Iniciar para comenzar con la rutina adaptada de 26 minutos.",
+            steps: [
+                // CALENTAMIENTO (4 min)
+                { phase: "Calentamiento", title: "Hombros y Brazos", duration: 60, type: "work", desc: "Rotaciones de hombros hacia atrás y hacia adelante. Abre y cierra las manos para activar la circulación." },
+                { phase: "Calentamiento", title: "Rotación de Cadera", duration: 60, type: "work", desc: "Manos en las caderas, haz círculos pequeños y lentos para liberar tensión lumbar." },
+                { phase: "Calentamiento", title: "Transferencia de Peso", duration: 60, type: "work", desc: "Con los pies un poco más separados que el ancho de los hombros, balancea el peso de tu cuerpo de una pierna a la otra suavemente." },
+                { phase: "Calentamiento", title: "Marcha Estática Baja", duration: 60, type: "work", desc: "Despega los talones del suelo uno a uno, sin levantar completamente la planta del pie. Rodillas ligeramente flexionadas." },
+                
+                // TRABAJO DE BRAZOS (6 min)
+                { phase: "Trabajo de Brazos", title: "El Jab y el Directo (Minuto 1)", duration: 60, type: "work", desc: "Lanza puñetazos frontales controlados. No extiendas el codo al 100% y mantén la mirada al frente." },
+                { phase: "Trabajo de Brazos", title: "El Jab y el Directo (Minuto 2)", duration: 60, type: "work", desc: "Continúa lanzando puñetazos frontales alternos de forma controlada sin sacudir el cuello." },
+                { phase: "Trabajo de Brazos", title: "Ganchos Cortos (Minuto 1)", duration: 60, type: "work", desc: "Golpes laterales simulando rodear un arco. El movimiento nace de la rotación suave del pecho, no del cuello." },
+                { phase: "Trabajo de Brazos", title: "Ganchos Cortos (Minuto 2)", duration: 60, type: "work", desc: "Continúa con los ganchos laterales, manteniendo el abdomen contraído para proteger la espalda." },
+                { phase: "Trabajo de Brazos", title: "Combinación Básica (Minuto 1)", duration: 60, type: "work", desc: "Ejecuta de manera lenta la secuencia: Jab - Directo - Gancho. Exhala profundamente con cada golpe." },
+                { phase: "Trabajo de Brazos", title: "Combinación Básica (Minuto 2)", duration: 60, type: "work", desc: "Continúa con la secuencia rítmica lenta: Jab - Directo - Gancho. Mantén la estabilidad." },
+                
+                // TRABAJO DE TORSO (6 min)
+                { phase: "Trabajo de Torso", title: "Guardia Blindada e Isométrico (Minuto 1)", duration: 60, type: "work", desc: "En postura estable, contrae el abdomen firmemente (core bracing). Acerca un codo hacia tu costilla de forma lenta y controlada simulando un bloqueo bajo, luego el otro." },
+                { phase: "Trabajo de Torso", title: "Guardia Blindada e Isométrico (Minuto 2)", duration: 60, type: "work", desc: "Continúa con el bloqueo costal lento. Mantén la columna alargada y la contracción abdominal activa sin flexionar la espalda." },
+                { phase: "Trabajo de Torso", title: "Giros Cortos de Tronco Bloqueado (Minuto 1)", duration: 60, type: "work", desc: "Con las manos arriba en guardia, realiza micro-rotaciones del pecho (solo unos 10-15 grados) de lado a lado. El cuello y la pelvis se quedan fijos mirando al frente." },
+                { phase: "Trabajo de Torso", title: "Giros Cortos de Tronco Bloqueado (Minuto 2)", duration: 60, type: "work", desc: "Sigue con las micro-rotaciones controladas. Siente la activación de los oblicuos sin forzar en ningún momento la zona lumbar." },
+                { phase: "Trabajo de Torso", title: "Esquiva Lateral Lineal (Minuto 1)", duration: 60, type: "work", desc: "Desplaza tu torso sutilmente de lado a lado de forma recta, como si tus costillas se deslizaran horizontalmente. Mantén los hombros nivelados y la columna recta." },
+                { phase: "Trabajo de Torso", title: "Esquiva Lateral Lineal (Minuto 2)", duration: 60, type: "work", desc: "Continúa con el deslizamiento lateral controlado para trabajar el core lateral sin realizar flexiones profundas ni giros bruscos." },
+                
+                // TRABAJO DE PIERNAS (6 min)
+                { phase: "Trabajo de Piernas", title: "Elevación de Talón con Guardia (Minuto 1)", duration: 60, type: "work", desc: "En postura de guardia, eleva ligeramente el talón derecho y luego el izquierdo de forma alterna, contrayendo el glúteo y abdomen." },
+                { phase: "Trabajo de Piernas", title: "Elevación de Talón con Guardia (Minuto 2)", duration: 60, type: "work", desc: "Continúa alternando la elevación de talones para generar la intención del movimiento sin despegar los pies del suelo." },
+                { phase: "Trabajo de Piernas", title: "Patada Frontal Baja - Pierna Izquierda", duration: 60, type: "work", desc: "Apóyate en una pared o silla si es necesario. Eleva la rodilla izquierda solo unos centímetros y extiende el pie hacia el frente, apuntando abajo." },
+                { phase: "Trabajo de Piernas", title: "Patada Frontal Baja - Pierna Derecha", duration: 60, type: "work", desc: "Cambia de pierna. Eleva la rodilla derecha unos centímetros y extiende el pie de forma baja hacia el frente con total control." },
+                { phase: "Trabajo de Piernas", title: "Rodilla al Frente Corta (Minuto 1)", duration: 60, type: "work", desc: "Da un paso corto hacia atrás. Trae la rodilla trasera hacia el frente de forma muy baja y regresa. Mantén el torso erguido." },
+                { phase: "Trabajo de Piernas", title: "Rodilla al Frente Corta (Minuto 2)", duration: 60, type: "work", desc: "Continúa con el movimiento controlled de la rodilla hacia el frente sin flexionar la columna." },
+                
+                // ENFRIAMIENTO (4 min)
+                { phase: "Enfriamiento", title: "Respiraciones Profundas", duration: 60, type: "work", desc: "Inhala elevando los brazos suavemente (hasta donde sea cómodo) y exhala bajándolos para calmar el ritmo cardíaco." },
+                { phase: "Enfriamiento", title: "Estiramiento de Pecho y Espalda", duration: 60, type: "work", desc: "Lleva los hombros hacia atrás suavemente para abrir el pecho. Mantén el cuello completamente neutro." },
+                { phase: "Enfriamiento", title: "Estiramiento de Isquiotibiales - Lado 1", duration: 60, type: "work", desc: "Sentado en una silla firme, extiende una pierna al frente con el talón abajo. Inclina el torso hacia adelante desde la cadera con la espalda recta." },
+                { phase: "Enfriamiento", title: "Estiramiento de Isquiotibiales - Lado 2", duration: 60, type: "work", desc: "Cambia de pierna. Sentado, extiende la otra pierna con el talón abajo e inclina el torso sutilmente hacia adelante desde la cadera." }
+            ]
+        },
+        resistencia: {
+            title: "Rutina de Resistencia (1:1)",
+            initialTime: "03:00",
+            initialDesc: "Esta aplicación guiará tu rutina alternando 30 segundos de actividad dinámica con 30 segundos de descanso total.",
+            steps: [
+                // CALENTAMIENTO
+                { phase: "Calentamiento", title: "Movimiento Suave", duration: 180, type: "work", desc: "Muévete suavemente en el sitio para entrar en calor antes de la parte dinámica." },
+                
+                // VUELTA 1 (4 min)
+                { phase: "Vuelta 1 - Trabajo", title: "Sentadillas", duration: 30, type: "work", desc: "Baja y sube de forma constante y controlada. Céntrate en empujar bien con los talones al subir." },
+                { phase: "Vuelta 1 - Descanso", title: "Descanso Total", duration: 30, type: "rest", desc: "Recupera el aliento y relaja las piernas." },
+                { phase: "Vuelta 1 - Trabajo", title: "Press de Hombros", duration: 30, type: "work", desc: "Empuja los brazos hacia el techo con energía (llevándolos bien arriba de los hombros) y bájalos controlando el peso de tu cuerpo." },
+                { phase: "Vuelta 1 - Descanso", title: "Descanso Total", duration: 30, type: "rest", desc: "Mantén el cuello relajado y respira." },
+                { phase: "Vuelta 1 - Trabajo", title: "Zancadas Hacia Atrás", duration: 30, type: "work", desc: "Sujétate de tu apoyo o hazlo libre: alterna las piernas dando un paso atrás. Mantén un ritmo donde sientas el equilibrio controlado." },
+                { phase: "Vuelta 1 - Descanso", title: "Descanso Total", duration: 30, type: "rest", desc: "Respira profundo y prepárate para el tren superior." },
+                { phase: "Vuelta 1 - Trabajo", title: "Aperturas en T e Y", duration: 30, type: "work", desc: "Abre los brazos en 'T', regresa al centro, sube en 'Y' extendiendo bien. Mantén el movimiento fluido." },
+                { phase: "Vuelta 1 - Descanso", title: "Descanso Total", duration: 30, type: "rest", desc: "¡Primera vuelta completada!" },
+                
+                // DESCANSO LARGO (2 min)
+                { phase: "Recuperación", title: "Descanso Largo", duration: 120, type: "rest", desc: "Descansa 2 minutos enteros. Aprovecha para tomar agua y bajar las pulsaciones cardíacas." },
+                
+                // VUELTA 2 (4 min)
+                { phase: "Vuelta 2 - Trabajo", title: "Sentadillas", duration: 30, type: "work", desc: "Mantén la técnica: baja y sube de forma constante, empujando con los talones." },
+                { phase: "Vuelta 2 - Descanso", title: "Descanso Total", duration: 30, type: "rest", desc: "Recupera el aliento." },
+                { phase: "Vuelta 2 - Trabajo", title: "Press de Hombros", duration: 30, type: "work", desc: "Empuja los brazos hacia el techo con energía y bájalos con control." },
+                { phase: "Vuelta 2 - Descanso", title: "Descanso Total", duration: 30, type: "rest", desc: "Respira y relaja los hombros." },
+                { phase: "Vuelta 2 - Trabajo", title: "Zancadas Hacia Atrás", duration: 30, type: "work", desc: "Último esfuerzo de piernas. Alterna zancadas hacia atrás manteniendo el equilibrio." },
+                { phase: "Vuelta 2 - Descanso", title: "Descanso Total", duration: 30, type: "rest", desc: "Casi terminas. ¡Prepárate para el último ejercicio!" },
+                { phase: "Vuelta 2 - Trabajo", title: "Aperturas en T e Y", duration: 30, type: "work", desc: "Abre los brazos en 'T', regresa al centro, sube en 'Y'. Aprieta la espalda." },
+                { phase: "Vuelta 2 - Descanso", title: "Finalizado", duration: 30, type: "rest", desc: "¡Has terminado la rutina! Tómate tu tiempo para recuperarte." }
+            ]
+        }
+    };
+
+    let currentRoutineKey = "abs";
+    let currentStep = 0;
+    let timeLeft = routinesData[currentRoutineKey].steps[0].duration;
+    let timerInterval = null;
+    let isRunning = false;
+
+    function getCurrentRoutine() {
+        return routinesData[currentRoutineKey];
+    }
+
+    function switchRoutine() {
+        const select = document.getElementById("routine-select");
+        currentRoutineKey = select.value;
+        resetRoutine();
+    }
+
+    function updateDisplay() {
+        const routineObj = getCurrentRoutine();
+        const step = routineObj.steps[currentStep];
+        
+        document.getElementById("phase").innerText = step.phase;
+        document.getElementById("exercise-title").innerText = step.title;
+        document.getElementById("description").innerText = step.desc;
+        
+        const timerEl = document.getElementById("timer");
+        timerEl.className = "timer " + (step.type === "work" ? "work" : (step.type === "rest" ? "rest" : ""));
+
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+        timerEl.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+        if (isRunning) return;
+        isRunning = true;
+        
+        const routineObj = getCurrentRoutine();
+
+        if (currentStep >= routineObj.steps.length) {
+            resetRoutine();
+        }
+
+        updateDisplay();
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            
+            if (timeLeft < 0) {
+                currentStep++;
+                if (currentStep < routineObj.steps.length) {
+                    timeLeft = routineObj.steps[currentStep].duration;
+                } else {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    document.getElementById("phase").innerText = "¡Rutina Completada!";
+                    document.getElementById("exercise-title").innerText = "¡Excelente Trabajo!";
+                    document.getElementById("description").innerText = "Has completado la rutina con éxito.";
+                    document.getElementById("timer").className = "timer";
+                    document.getElementById("timer").innerText = "00:00";
+                    return;
+                }
+            }
+            updateDisplay();
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        clearInterval(timerInterval);
+        isRunning = false;
+    }
+
+    function resetRoutine() {
+        clearInterval(timerInterval);
+        isRunning = false;
+        currentStep = 0;
+        
+        const routineObj = getCurrentRoutine();
+        timeLeft = routineObj.steps[0].duration;
+        
+        document.getElementById("phase").innerText = "Presiona Iniciar";
+        document.getElementById("exercise-title").innerText = "¡Listo para empezar!";
+        document.getElementById("description").innerText = routineObj.initialDesc;
+        
+        const timerEl = document.getElementById("timer");
+        timerEl.className = "timer";
+        timerEl.innerText = routineObj.initialTime;
+    }
+
+    // Inicializar al cargar
+    window.onload = function() {
+        resetRoutine();
+    };
+</script>
+
+</body>
+</html>
