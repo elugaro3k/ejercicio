@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicación Integrada de Rutinas de Ejercicios</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 650px;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-top: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        /* Selección de Rutina */
+        .selector-group {
+            margin-bottom: 25px;
+            text-align: left;
+            background: #eef2f5;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 5px solid #3498db;
+        }
+        .selector-group label {
+            display: block;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        .selector-group select {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: white;
+            color: #333;
+            cursor: pointer;
+            outline: none;
+        }
+        .selector-group select:focus {
+            border-color: #3498db;
+        }
+
+        .phase {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        .timer {
+            font-size: 4.5rem;
+            font-weight: bold;
+            color: #2980b9;
+            margin: 15px 0;
+            font-variant-numeric: tabular-nums;
+            transition: color 0.3s ease;
+        }
+        .timer.work { color: #e74c3c; }
+        .timer.rest { color: #2ecc71; }
+        
+        .exercise-title {
+            font-size: 1.7rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 600;
+            min-height: 2.2rem;
+        }
+        .description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 25px;
+            text-align: left;
+            background: #f9f9f9;
+            padding: 15px;
+            border-left: 5px solid #2980b9;
+            border-radius: 4px;
+            min-height: 80px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        .btn-start { background-color: #2ecc71; color: white; }
+        .btn-start:hover { background-color: #27ae60; }
+        .btn-pause { background-color: #f39c12; color: white; }
+        .btn-pause:hover { background-color: #d35400; }
+        .btn-reset { background-color: #95a5a6; color: white; }
+        .btn-reset:hover { background-color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Centro de Rutinas Adaptadas</h1>
+
+    <div class="selector-group">
+        <label for="routine-select">Selecciona una Rutina:</label>
+        <select id="routine-select" onchange="switchRoutine()">
+            <option value="abs">Abdominales de Pie Adaptados</option>
+            <option value="kickboxing">Rutina de Kickboxing (30 min)</option>
+            <option value="resistencia">Rutina de Resistencia (1:1)</option>
+        </select>
+    </div>
+
+    <div id="phase" class="phase">Presiona Iniciar</div>
+    
+    <div id="timer" class="timer">02:00</div>
+    
+    <div id="exercise-title" class="exercise-title">¡Listo para empezar!</div>
+    <div id="description" class="description">
+        Cargando la rutina seleccionada...
+    </div>
+    
+    <div class="buttons">
+        <button class="btn-start" onclick="startTimer()">Iniciar</button>
+        <button class="btn-pause" onclick="pauseTimer()">Pausar</button>
+        <button class="btn-reset" onclick="resetRoutine()">Reiniciar</button>
+    </div>
+</div>
+
+<script>
+    // Base de datos de rutinas
+    const routinesData = {
+        abs: {
+            title: "Abdominales de Pie Adaptados",
+            initialTime: "02:00",
+            initialDesc: "Rutina adaptada 100% de pie sin suelo. Presiona Iniciar para comenzar con el calentamiento suave.",
+            steps: [
+                // CALENTAMIENTO NEUTRO (2 min)
+                { phase: "Calentamiento", title: "Respiración Diafragmática", duration: 60, type: "work", desc: "De pie, inhala expandiendo el abdomen y exhala metiendo el ombligo hacia la espina. Mantén los hombros relajados y la mirada al frente." },
+                { phase: "Calentamiento", title: "Balanceo de Cadera Neutro", duration: 60, type: "work", desc: "Sujétate suavemente si necesitas equilibrio. Realiza basculaciones pélvicas ligeras hacia adelante y atrás para activar la zona lumbar." },
+                
+                // BLOQUE 1: CORE ESTÁTICO Y OBLICUOS (4 min)
+                { phase: "Bloque 1 - Trabajo", title: "Inclinación Lateral de Costillas", duration: 45, type: "work", desc: "Sin doblar el cuello ni inclinar la zona lumbar, desliza una mano hacia la rodilla lateralmente 2-3 cm y regresa. Alterna lados lentamente." },
+                { phase: "Bloque 1 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Suelta los brazos y respira manteniendo postura erguida." },
+                { phase: "Bloque 1 - Trabajo", title: "Contracción de Guardia (Core Bracing)", duration: 45, type: "work", desc: "Brazos en guardia relajada. Mete el abdomen fuertemente como si fueras a recibir un toque ligero en el vientre. Mantén la respiración." },
+                { phase: "Bloque 1 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Relaja la pared abdominal y recupera la postura." },
+                { phase: "Bloque 1 - Trabajo", title: "Micro-Rotación de Pecho", duration: 45, type: "work", desc: "Manos sobre el pecho. Gira el tronco solo 10 a 15 grados a cada lado. Caderas, piernas y cuello se mantienen totalmente firmes apuntando al frente." },
+                { phase: "Bloque 1 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Toma aire profundo por la nariz y exhala suavemente." },
+
+                // DESCANSO INTERMEDIO (1 min)
+                { phase: "Recuperación", title: "Descanso de Columna", duration: 60, type: "rest", desc: "Relaja los hombros, mueve los brazos libremente y bebe un sorbo de agua si lo necesitas." },
+
+                // BLOQUE 2: ESTABILIDAD E ISOMETRÍA (4 min)
+                { phase: "Bloque 2 - Trabajo", title: "Caminata Estática de Apoyo", duration: 45, type: "work", desc: "Despega suavemente los talones del suelo sin levantar los dedos de las articulaciones, contrayendo el abdomen con cada paso para mantener el equilibrio." },
+                { phase: "Bloque 2 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Respira hondo y asegura tu postura recta." },
+                { phase: "Bloque 2 - Trabajo", title: "Press Isométrico de Manos", duration: 45, type: "work", desc: "Junta las palmas al frente del pecho. Presiona una contra otra fuertemente durante 5 segundos contrayendo el abdomen, luego suelta 2 segundos y repite." },
+                { phase: "Bloque 2 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Relaja los hombros sin dejar caer el cuello hacia abajo." },
+                { phase: "Bloque 2 - Trabajo", title: "Extensión Cruzada Suave", duration: 45, type: "work", desc: "Lleva una mano suavemente hacia la cadera opuesta en diagonal mediante una micro-flexión abdominal, manteniendo la espalda totalmente neutra." },
+                { phase: "Bloque 2 - Descanso", title: "Descanso Activo", duration: 15, type: "rest", desc: "Último descanso antes del estiramiento final." },
+
+                // ENFRIAMIENTO (2 min)
+                { phase: "Enfriamiento", title: "Despresurización Lumbar", duration: 60, type: "work", desc: "Coloca las manos en la cintura baja y estira suavemente el pecho hacia el frente sin tirar la cabeza hacia atrás." },
+                { phase: "Enfriamiento", title: "Respiración Final", duration: 60, type: "work", desc: "Inhala elevando los brazos suavemente a los costados y exhala bajándolos para finalizar." }
+            ]
+        },
+        kickboxing: {
+            title: "Rutina de Kickboxing Adaptada",
+            initialTime: "01:00",
+            initialDesc: "Presiona el botón de Iniciar para comenzar con la rutina adaptada de 30 minutos.",
+            steps: [
+                // CALENTAMIENTO (4 min)
+                { phase: "Calentamiento", title: "Hombros y Brazos", duration: 60, type: "work", desc: "Rotaciones de hombros hacia atrás y hacia adelante. Abre y cierra las manos para activar la circulación." },
+                { phase: "Calentamiento", title: "Rotación de Cadera", duration: 60, type: "work", desc: "Manos en las caderas, haz círculos pequeños y lentos para liberar tensión lumbar." },
+                { phase: "Calentamiento", title: "Transferencia de Peso", duration: 60, type: "work", desc: "Con los pies un poco más separados que el ancho de los hombros, balancea el peso de tu cuerpo de una pierna a la otra suavemente." },
+                { phase: "Calentamiento", title: "Marcha Estática Baja", duration: 60, type: "work", desc: "Despega los talones del suelo uno a uno, sin levantar completamente la planta del pie. Rodillas ligeramente flexionadas." },
+                
+                // TRABAJO DE BRAZOS (6 min)
+                { phase: "Trabajo de Brazos", title: "El Jab y el Directo (Minuto 1)", duration: 60, type: "work", desc: "Lanza puñetazos frontales controlados. No extiendas el codo al 100% y mantén la mirada al frente." },
+                { phase: "Trabajo de Brazos", title: "El
